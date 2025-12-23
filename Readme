@@ -16,3 +16,254 @@ move to the root director
 run compose file by using this
 docker-compose down
 docker-compose up -d --build
+
+###################################################################################################################################################################################
+
+🚆 Train Ticket Reservation System
+Dockerized Java Web Application with PostgreSQL
+
+This project is a Train Ticket Reservation System developed using Java (Servlets + JDBC) and deployed on Apache Tomcat.
+The application was originally built using Oracle Database, later migrated to PostgreSQL, and fully containerized using Docker and Docker Compose.
+
+This README documents everything that was done, step-by-step.
+
+📌 Project Overview
+
+User Registration & Login
+
+Train Search & Availability
+
+Ticket Booking
+
+Admin Train Management
+
+Persistent database storage
+
+Docker-based deployment
+
+🛠️ Technology Stack
+Layer	Technology
+Backend	Java (Servlets, JDBC)
+Frontend	HTML, CSS
+Server	Apache Tomcat 8.5
+Database	PostgreSQL 15
+Containers	Docker, Docker Compose
+Build Tool	Maven
+📂 Project Structure
+/root
+├── docker-compose.yml
+└── train-ticket-reservation
+    ├── Dockerfile
+    ├── pom.xml
+    ├── src
+    │   └── com/shashi
+    │       ├── servlets
+    │       ├── service
+    │       ├── utility
+    │       └── beans
+    ├── WebContent
+    ├── target
+    │   └── TrainBook-1.0.0-SNAPSHOT.war
+
+🐳 Docker & Docker Compose Setup
+Application Container
+
+Runs Tomcat
+
+Deploys WAR file
+
+Database Container
+
+PostgreSQL 15
+
+Persistent data using Docker volume
+
+docker-compose.yml (Outside Project Folder)
+version: "3.9"
+
+services:
+  train-app:
+    build:
+      context: ./train-ticket-reservation
+    image: train-reservation-system
+    container_name: train-reservation-app
+    ports:
+      - "8081:8080"
+    environment:
+      DB_URL: jdbc:postgresql://train-db:5432/train_db
+      DB_USERNAME: train_user
+      DB_PASSWORD: train_pass
+    depends_on:
+      - train-db
+
+  train-db:
+    image: postgres:15
+    container_name: train-reservation-db
+    environment:
+      POSTGRES_DB: train_db
+      POSTGRES_USER: train_user
+      POSTGRES_PASSWORD: train_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - train_db_data:/var/lib/postgresql/data
+
+volumes:
+  train_db_data:
+
+▶️ Running the Application
+docker-compose up -d --build
+
+
+Verify:
+
+docker ps
+
+
+Access Application:
+
+http://<EC2-IP>:8081/TrainBook-1.0.0-SNAPSHOT
+
+🔄 Database Migration (Oracle ➜ PostgreSQL)
+❌ Removed
+
+Oracle JDBC driver
+
+Oracle connection strings
+
+Oracle-specific SQL logic
+
+✅ Added
+
+PostgreSQL JDBC driver
+
+Docker-based PostgreSQL
+
+Environment-variable-based DB config
+
+🔌 Database Connection Utility (DBUtil.java)
+
+Reads DB credentials from Docker environment variables
+
+Uses PostgreSQL JDBC driver
+
+String url = System.getenv("DB_URL");
+String user = System.getenv("DB_USERNAME");
+String pass = System.getenv("DB_PASSWORD");
+
+Class.forName("org.postgresql.Driver");
+Connection con = DriverManager.getConnection(url, user, pass);
+
+🧱 Database Schema Creation
+
+All tables were created manually inside PostgreSQL.
+
+Access Database
+docker exec -it train-reservation-db psql -U train_user -d train_db
+
+👤 Customer Table
+CREATE TABLE customer (
+    MAILID VARCHAR(100) PRIMARY KEY,
+    PWORD VARCHAR(255) NOT NULL,
+    FNAME VARCHAR(50),
+    LNAME VARCHAR(50),
+    ADDR VARCHAR(255),
+    PHNO BIGINT
+);
+
+🚆 Train Table
+CREATE TABLE train (
+    trainno INT PRIMARY KEY,
+    trainname VARCHAR(100),
+    source VARCHAR(50),
+    destination VARCHAR(50),
+    available INT,
+    fare NUMERIC(10,2)
+);
+
+🎫 Booking Table
+CREATE TABLE booking (
+    bookingid SERIAL PRIMARY KEY,
+    email VARCHAR(100),
+    trainno INT,
+    journeydate DATE,
+    seats INT,
+    totalfare NUMERIC(10,2),
+    CONSTRAINT booking_email_fkey
+        FOREIGN KEY (email) REFERENCES customer(mailid)
+);
+
+👮 Admin Table
+CREATE TABLE admin (
+    adminid VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(255) NOT NULL
+);
+
+🛠️ Major Code Fixes Performed
+✅ Fixed JDBC Insert Issue
+
+Replaced executeQuery() with executeUpdate() for INSERT statements
+
+Required for PostgreSQL compatibility
+
+✅ Fixed Column Name Mismatches
+
+PostgreSQL is strict about column names
+
+Database schema aligned exactly with Java code
+
+✅ Fixed Foreign Key Dependency Errors
+
+Dropped tables in correct order
+
+Recreated schema with proper constraints
+
+🧪 Verification Commands
+\dt
+SELECT * FROM customer;
+SELECT * FROM booking;
+SELECT * FROM train;
+
+✅ Final Achievements
+
+✔ Oracle → PostgreSQL migration completed
+
+✔ Dockerized application and database
+
+✔ User registration & login working
+
+✔ Booking flow functional
+
+✔ Persistent database storage
+
+✔ Production-ready architecture
+
+🔮 Future Enhancements
+
+Password hashing (BCrypt)
+
+Auto schema initialization (init.sql)
+
+Connection pooling
+
+Booking concurrency control
+
+Kubernetes deployment
+
+👨‍💻 Author
+
+Rajesh
+DevOps / Java Developer
+This project demonstrates real-world legacy application modernization using Docker and PostgreSQL.
+
+If you want, I can also:
+
+Split this into multiple README files
+
+Create an architecture diagram
+
+Add screenshots section
+
+Prepare resume-ready project explanation
+
+Just tell me 👍
