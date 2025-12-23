@@ -1,0 +1,164 @@
+Database Setup & Configuration Guide
+
+This document explains how the PostgreSQL database was created, configured, and connected to the Train Ticket Reservation System running in Docker.
+
+🛠️ Technology Stack
+
+Database: PostgreSQL 15
+
+Application: Java (Servlets + JDBC)
+
+Containerization: Docker & Docker Compose
+
+Application Server: Apache Tomcat 8.5
+
+📂 Database Architecture
+Application (Tomcat + WAR)
+        |
+        | JDBC
+        |
+PostgreSQL (Docker Container)
+
+
+The database runs in a separate Docker container and is accessed using JDBC via Docker networking.
+
+🐳 Database Container Setup
+
+The PostgreSQL database is created using Docker Compose.
+
+Database Service Configuration
+train-db:
+  image: postgres:15
+  container_name: train-reservation-db
+  environment:
+    POSTGRES_DB: train_db
+    POSTGRES_USER: train_user
+    POSTGRES_PASSWORD: train_pass
+  ports:
+    - "5432:5432"
+  volumes:
+    - train_db_data:/var/lib/postgresql/data
+
+Key Points
+
+Database name: train_db
+
+Username: train_user
+
+Password: train_pass
+
+Data is persisted using Docker volume (train_db_data)
+
+🔑 Database Connection Configuration
+
+The application reads database credentials from environment variables provided by Docker Compose.
+
+Environment Variables
+environment:
+  DB_URL: jdbc:postgresql://train-db:5432/train_db
+  DB_USERNAME: train_user
+  DB_PASSWORD: train_pass
+
+
+⚠️ train-db is the Docker service name, not localhost.
+
+🔌 JDBC Connection Utility (DBUtil.java)
+
+The application connects to PostgreSQL using JDBC.
+
+Class.forName("org.postgresql.Driver");
+Connection con = DriverManager.getConnection(
+    System.getenv("DB_URL"),
+    System.getenv("DB_USERNAME"),
+    System.getenv("DB_PASSWORD")
+);
+
+🧱 Database Schema Creation
+
+All tables were created manually inside the PostgreSQL container using psql.
+
+Access PostgreSQL Container
+docker exec -it train-reservation-db psql -U train_user -d train_db
+
+👤 Customer Table
+CREATE TABLE customer (
+    MAILID VARCHAR(100) PRIMARY KEY,
+    PWORD VARCHAR(255) NOT NULL,
+    FNAME VARCHAR(50),
+    LNAME VARCHAR(50),
+    ADDR VARCHAR(255),
+    PHNO BIGINT
+);
+
+
+Stores registered user details
+
+MAILID is the primary key
+
+🚆 Train Table
+CREATE TABLE train (
+    trainno INT PRIMARY KEY,
+    trainname VARCHAR(100),
+    source VARCHAR(50),
+    destination VARCHAR(50),
+    available INT,
+    fare NUMERIC(10,2)
+);
+
+
+Stores train details and seat availability
+
+🎫 Booking Table
+CREATE TABLE booking (
+    bookingid SERIAL PRIMARY KEY,
+    email VARCHAR(100),
+    trainno INT,
+    journeydate DATE,
+    seats INT,
+    totalfare NUMERIC(10,2),
+    CONSTRAINT booking_email_fkey
+        FOREIGN KEY (email) REFERENCES customer(mailid)
+);
+
+
+Stores booking details
+
+Linked to customer table using a foreign key
+
+👮 Admin Table
+CREATE TABLE admin (
+    adminid VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(255) NOT NULL
+);
+
+
+Optional default admin:
+
+INSERT INTO admin VALUES ('admin', 'admin123');
+
+🔗 Database Relationships
+
+customer → booking (One-to-Many)
+
+Foreign key ensures:
+
+A booking cannot exist without a valid user
+
+Data integrity is enforced at database level
+
+▶️ Starting the Database
+
+From the project root:
+
+docker-compose up -d
+
+
+Verify containers:
+
+docker ps
+
+🧪 Verification Commands
+\dt
+SELECT * FROM customer;
+SELECT * FROM booking;
+SELECT * FROM train;
