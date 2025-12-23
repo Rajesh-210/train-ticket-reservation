@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  train-app:
+    build:
+      context: ./train-ticket-reservation
+      dockerfile: Dockerfile
+    image: train-reservation-system:latest
+    container_name: train-reservation-app
+    ports:
+      - "8081:8080"
+    depends_on:
+      - train-db
+    environment:
+      DB_URL: jdbc:postgresql://train-db:5432/train_db
+      DB_USERNAME: train_user
+      DB_PASSWORD: train_pass
+    restart: unless-stopped
+
+  train-db:
+    image: postgres:15
+    container_name: train-reservation-db
+    environment:
+      POSTGRES_DB: train_db
+      POSTGRES_USER: train_user
+      POSTGRES_PASSWORD: train_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - train_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  train_db_data:
