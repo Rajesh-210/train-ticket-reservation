@@ -1,0 +1,18 @@
+Install Docker and docker compose
+apt update and apt upgrade
+clone the project
+create docker compose file
+move to project folder cd train-ticket-reservation
+apt install maven(apt install maven)
+mvn validate
+mvn compile
+mvn test
+mvn package
+ls
+will see target file is created
+cd target
+copy the jar/war file in the docker file
+move to the root director
+run compose file by using this
+docker-compose down
+docker-compose up -d --build
